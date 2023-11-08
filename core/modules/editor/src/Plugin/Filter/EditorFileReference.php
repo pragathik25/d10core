@@ -9,6 +9,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\file\FileInterface;
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
+use Drupal\image\Entity\ImageStyle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -97,6 +98,15 @@ class EditorFileReference extends FilterBase implements ContainerFactoryPluginIn
               $height = $image->getHeight();
               // Set dimensions to avoid content layout shift (CLS).
               // @see https://web.dev/cls/
+              // Add webp image styles for the image loaded without
+              // image styles.
+              if (!$node->hasAttribute('data-image-style') || $node->getAttribute('data-image-style') == "") {
+                if (ImageStyle::load('webp')) {
+                  $image_style = ImageStyle::load('webp')->buildUrl($image->getSource());
+                  $node->setAttribute('src', $image_style);
+                  $node->setAttribute('data-image-style', 'webp');
+                }
+              }
               if ($width !== NULL && !$node->hasAttribute('width')) {
                 $node->setAttribute('width', (string) $width);
               }
